@@ -1,0 +1,23 @@
+# FastAPI & Servidor
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+pydantic>=2.6.0
+pydantic-settings>=2.2.0
+
+# Banco de Dados & pgvector
+sqlalchemy>=2.0.28
+psycopg[binary]>=3.1.18
+pgvector>=0.2.5
+alembic>=1.13.1
+
+# AI & OpenAI
+openai>=1.14.0
+
+# Processamento de Documentos
+pypdf>=4.1.0
+python-docx>=1.1.0
+
+# Utilitários
+python-dotenv>=1.0.1
+python-multipart>=0.0.9
+
