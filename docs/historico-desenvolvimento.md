@@ -9,7 +9,10 @@ Este documento registra a evolução, decisões de arquitetura e passos prático
 ### 1. Concepção e Planejamento
 - Leitura e alinhamento com o documento mestre de requisitos e arquitetura ([docs/rag-tech.md](rag-tech.md)).
 - Definição do escopo do MVP focado em: Ingestão de Documentos, Embeddings, Busca Vetorial com pgvector, RAG Grounded e Interface de Chat com Citações.
-- Criação da skill base do agente mentor ([.agents/skills/rag-tech-mentor/SKILL.md](../.agents/skills/rag-tech-mentor/SKILL.md)) para suporte didático e consultivo.
+- Criação das skills do assistente em `.agents/skills/`:
+  - `rag-tech-mentor`: Mentor didático para guiar desenvolvimento e aprendizado.
+  - `rag-tech-study-docs`: Gerador de notas conceituais essenciais em `docs/estudos/`.
+  - `rag-tech-dev-history`: Mantenedor conciso e estruturado deste histórico.
 
 ---
 
@@ -51,19 +54,21 @@ rag-tech/
 ---
 
 ### 4. Configuração do Ambiente Python
-- Criação do arquivo [backend/requirements.txt](../backend/requirements.txt) contendo:
-  - Framework Web: `fastapi`, `uvicorn`, `pydantic`, `pydantic-settings`
-  - Banco e Vetores: `sqlalchemy`, `psycopg[binary]`, `pgvector`, `alembic`
-  - Inteligência Artificial: `openai`
-  - Processamento Documental: `pypdf`, `python-docx`
-  - Utilitários: `python-dotenv`, `python-multipart`
+- Criação do [backend/requirements.txt](../backend/requirements.txt) contendo FastAPI, SQLAlchemy, psycopg v3, pgvector, OpenAI, pypdf e utilitários.
 - Criação e ativação do ambiente virtual isolado `.venv`.
-- Instalação completa de todas as dependências com `pip install -r backend/requirements.txt`.
+- Instalação das dependências com `pip install -r backend/requirements.txt`.
 
 ---
 
-### 🎯 Próximos Passos Imediatos:
-1. Criar o módulo de configuração centralizada em `backend/app/core/config.py` para carregar as variáveis de ambiente.
-2. Criar a conexão com o banco de dados em `backend/app/db/session.py` utilizando SQLAlchemy.
-3. Criar endpoint de teste de conexão no FastAPI e validar a extensão `pgvector`.
+### 5. Configurações Globais e Conexão com o Banco de Dados
+- Implementação de [backend/app/core/config.py](../backend/app/core/config.py) utilizando `pydantic-settings` para carregamento seguro do `.env`.
+- Implementação de [backend/app/db/session.py](../backend/app/db/session.py) gerenciando o `engine` SQLAlchemy e o gerador de sessões `get_db`.
+- Atualização de [backend/app/main.py](../backend/app/main.py) com rotas `/health` e `/health/db`.
+- **Validação:** Ativação e verificação da extensão `pgvector (v0.8.6)` no PostgreSQL com teste automatizado executado com sucesso.
 
+---
+
+### 🎯 Próximos Passos (Início da Fase 2 — Processamento de Documentos):
+1. Modelagem das tabelas no banco de dados (`Document` e `DocumentChunk`) usando SQLAlchemy + pgvector.
+2. Criação do serviço de extração e limpeza de texto (`app/services/document_service.py`) para PDF, DOCX, TXT e Markdown.
+3. Criação da estratégia de *Chunking* (divisão em blocos de texto com sobreposição/overlap).

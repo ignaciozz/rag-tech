@@ -1,13 +1,17 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+from app.core.config import settings
+from app.db.session import get_db, engine
 
 app = FastAPI(
-    title="RAG Tech Docs API",
+    title=settings.PROJECT_NAME,
     description="API para ingestão de documentação técnica e busca semântica fundamentada (RAG).",
-    version="0.1.0",
+    version=settings.VERSION,
 )
 
-# Configuração básica de CORS para permitir requisições do Frontend
+# Configuração de CORS para permitir requisições do Frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,16 +20,57 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+def startup_db():
+    """Garante que a extensão pgvector esteja ativada no banco ao inicializar."""
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+            connection.commit()
+    except Exception as e:
+        print(f"⚠️ Aviso ao verificar extensão pgvector: {e}")
+
 @app.get("/health", tags=["Health"])
 async def health_check():
-    """Endpoint para verificar a saúde da API."""
+    """Endpoint básico para verificar se a API está de pé."""
     return {
         "status": "healthy",
-        "service": "rag-tech-docs-api",
-        "version": "0.1.0"
+        "service": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT
     }
+
+@app.get("/health/db", tags=["Health"])
+def health_check_db(db: Session = Depends(get_db)):
+    """
+    Endpoint para testar a comunicação direta com o PostgreSQL
+    e verificar se a extensão pgvector está ativa e funcional.
+    """
+    try:
+        # Testa consulta simples
+        result = db.execute(text("SELECT version();")).scalar()
+        
+        # Verifica se o pgvector está instalado e ativo
+        vector_ext = db.execute(
+            text("SELECT extversion FROM pg_extension WHERE extname = 'vector';")
+        ).scalar()
+
+        return {
+            "status": "connected",
+            "database": "PostgreSQL",
+            "postgres_version": result,
+            "pgvector_active": vector_ext is not None,
+            "pgvector_version": vector_ext or "não instalado"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Erro ao conectar ao banco de dados: {str(e)}"
+        )
 
 @app.get("/", tags=["Root"])
 async def root():
-    return {"message": "Bem-vindo à API do RAG Tech Docs! Acesse /docs para ver a documentação interativa."}
-
+    return {
+        "message": f"Bem-vindo à API do {settings.PROJECT_NAME}!",
+        "docs_url": "/docs"
+    }
