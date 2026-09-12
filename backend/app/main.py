@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.core.config import settings
 from app.db.session import get_db, engine
+from app.db.session import get_db, engine, Base
+from app.db import models  # Importa os modelos para serem registrados no Base
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -23,12 +25,16 @@ app.add_middleware(
 @app.on_event("startup")
 def startup_db():
     """Garante que a extensão pgvector esteja ativada no banco ao inicializar."""
+    """Garante que a extensão pgvector e as tabelas estejam criadas no banco ao inicializar."""
     try:
         with engine.connect() as connection:
             connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
             connection.commit()
+        # Cria as tabelas do banco de dados se não existirem
+        Base.metadata.create_all(bind=engine)
     except Exception as e:
         print(f"⚠️ Aviso ao verificar extensão pgvector: {e}")
+        print(f"⚠️ Aviso ao inicializar banco de dados: {e}")
 
 @app.get("/health", tags=["Health"])
 async def health_check():
