@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.core.config import settings
-from app.db.session import get_db, engine
 from app.db.session import get_db, engine, Base
 from app.db import models  # Importa os modelos para serem registrados no Base
 
@@ -24,7 +23,6 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup_db():
-    """Garante que a extensão pgvector esteja ativada no banco ao inicializar."""
     """Garante que a extensão pgvector e as tabelas estejam criadas no banco ao inicializar."""
     try:
         with engine.connect() as connection:
