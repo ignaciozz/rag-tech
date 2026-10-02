@@ -18,3 +18,11 @@ class DocumentResponse(BaseModel):
     # Permite o Pydantic ler os campos direto de um objeto SQLAlchemy (Document),
     # em vez de exigir um dicionário.
     model_config = ConfigDict(from_attributes=True)
+
+
+class EmbedResponse(BaseModel):
+    """
+    Formato de retorno após gerar os embeddings dos chunks de um documento.
+    """
+    document_id: uuid.UUID
+    chunks_embedded: int

@@ -1,10 +1,13 @@
+import uuid
+
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.db.models import Document, DocumentChunk
 from app.db.session import get_db
-from app.schemas.document import DocumentResponse
+from app.schemas.document import DocumentResponse, EmbedResponse
 from app.services.chunker import chunk_text
+from app.services.embedder import generate_embeddings
 from app.services.extractor import extract_text
 
 router = APIRouter()
@@ -71,3 +74,32 @@ async def upload_document(
         created_at=document.created_at,
         chunks_count=len(chunks_data),
     )
+
+
+@router.post("/{document_id}/embed", response_model=EmbedResponse)
+def embed_document(document_id: uuid.UUID, db: Session = Depends(get_db)):
+    """
+    Gera e salva o embedding de todos os chunks do documento que ainda
+    não têm vetor (embedding IS NULL).
+    """
+    chunks = (
+        db.query(DocumentChunk)
+        .filter(DocumentChunk.document_id == document_id, DocumentChunk.embedding.is_(None))
+        .all()
+    )
+
+    if not chunks:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Nenhum chunk pendente de embedding para este documento.",
+        )
+
+    texts = [chunk.content for chunk in chunks]
+    embeddings = generate_embeddings(texts)
+
+    for chunk, embedding in zip(chunks, embeddings):
+        chunk.embedding = embedding
+
+    db.commit()
+
+    return EmbedResponse(document_id=document_id, chunks_embedded=len(chunks))
