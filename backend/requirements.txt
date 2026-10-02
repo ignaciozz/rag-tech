@@ -12,6 +12,7 @@ alembic>=1.13.1
 
 # AI & OpenAI
 openai>=1.14.0
+tiktoken>=0.6.0
 
 # Processamento de Documentos
 pypdf>=4.1.0
