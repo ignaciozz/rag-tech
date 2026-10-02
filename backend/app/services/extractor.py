@@ -8,10 +8,9 @@ def extract_text_from_txt_or_md(file_bytes: bytes) -> List[Dict[str, Any]]:
     Extrai texto de arquivos de texto puro (.txt ou .md).
     Como não há páginas fixas, consideramos todo o conteúdo como página 1.
     """
-    # TODO 1: Decodifique os bytes recebidos para string usando UTF-8 (com fallback para 'ignore' se houver caractere estranho)
-    # Dica: text = file_bytes.decode("utf-8", errors="ignore")
-    # Retorne no formato: [{"page_number": 1, "text": text.strip()}]
-    pass
+    text = file_bytes.decode("utf-8", errors="ignore")
+
+    return [{"page_number": 1, "text": text.strip()}]
 
 
 def extract_text_from_pdf(file_bytes: bytes) -> List[Dict[str, Any]]:
@@ -24,11 +23,11 @@ def extract_text_from_pdf(file_bytes: bytes) -> List[Dict[str, Any]]:
     pdf_file = io.BytesIO(file_bytes)
     reader = PdfReader(pdf_file)
 
-    # TODO 2: Percorra as páginas do PDF com enumerate(reader.pages, start=1)
-    # 1. Obtenha o texto da página usando: page.extract_text()
-    # 2. Se o texto não estiver vazio, adicione ao pages_content:
-    #    pages_content.append({"page_number": page_num, "text": text.strip()})
-    
+    for page_num, page in enumerate(reader.pages, start=1):
+        text = page.extract_text()
+        if text.strip():
+            pages_content.append({"page_number": page_num, "text": text.strip()})
+
     return pages_content
 
 
