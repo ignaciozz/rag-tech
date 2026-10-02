@@ -15,19 +15,19 @@ Este é o **primeiro projeto pessoal do usuário construído do zero** e um dos 
 - **Erros são checkpoints, não problemas.** Tratar erros de digitação, sintaxe ou lógica com acolhimento, explicando o que aconteceu e como resolver.
 - **Passo a passo concreto.** Ao propor uma tarefa, indicar o arquivo exato, o trecho/linha e o comando de terminal a ser executado.
 
-## Como equilibrar hands-on vs. automação
+## Como funciona o hands-on neste projeto
 
-Regra do primeiro contato: a **primeira vez** que um padrão aparece (primeiro `docker-compose.yml`, primeira rota FastAPI, primeira conexão com Postgres, primeiro componente React, primeira chamada à OpenAI) o usuário deve construir guiado, para entender como as peças se conectam desde a raiz. **Repetições depois disso** (3º endpoint parecido, schemas repetitivos) podem ser geradas diretamente, com uma explicação curta do que foi adicionado.
+**Quem escreve o código é a IA.** O usuário não precisa digitar implementação na mão — a experiência hands-on vem de **acompanhar e entender tudo o que é feito**, não de ser quem produz as teclas. O objetivo é aprendizado real, nunca a sensação de "o código apareceu magicamente".
 
-| Categoria | Exemplo | Quem conduz |
-| :--- | :--- | :--- |
-| Lógica central de IA/RAG | Chunking, embeddings, busca vetorial, prompts, citações | **Usuário**, com explicação passo a passo |
-| Primeiro boilerplate de um tipo | 1º Dockerfile, 1ª rota FastAPI, 1º hook React | **Usuário**, guiado |
-| Boilerplate repetitivo | 3ª rota similar, DTOs repetitivos | **IA**, gera e explica em 1-2 linhas |
-| Scaffolding de arquivos | Pastas e arquivos vazios com `TODO`s | **IA** cria a casca, **usuário** preenche a lógica |
-| Ajustes triviais | Typos, imports faltando, lint | **IA** corrige direto |
+Isso muda o fluxo de toda implementação não-trivial (ou seja, tudo exceto ajustes triviais como typos/lint):
 
-Princípio de Pareto: o usuário foca nos 20% que trazem 80% do entendimento (lógica de negócio, queries vetoriais, prompts de RAG); a IA monta scaffolding, imports e tipos utilitários. Entregas em fatias verticais: entender o conceito → implementar guiado → testar e ver funcionando → avançar. Se o usuário travar, intervir rápido com dica ou exemplo concreto em vez de deixar a sprint parar.
+1. **Antes de codar** — explicar o objetivo, o conceito-chave novo (se houver) e a decisão técnica tomada, incluindo alternativas consideradas e por que esta foi escolhida.
+2. **Implementar** — a IA escreve o código diretamente nos arquivos.
+3. **Depois de codar** — caminhar pelo código escrito: o que cada parte faz, como se conecta ao resto do fluxo de dados/arquitetura, e qualquer trade-off relevante.
+4. **Testar junto** — rodar o comando ou abrir o Swagger/navegador para ver a funcionalidade funcionando de fato.
+5. **Abrir espaço para revisão** — convidar perguntas e aceitar questionamento das decisões antes de avançar para a próxima peça.
+
+Princípio de Pareto aplicado à explicação (não à autoria): dedicar mais tempo explicando os 20% que trazem 80% do entendimento — lógica de negócio, queries vetoriais, prompts de RAG, decisões de arquitetura — e ser mais breve em boilerplate repetitivo (ex.: a 3ª rota parecida), sem deixar de mostrar o que foi feito.
 
 ## Objetivos de aprendizado do projeto
 
@@ -39,6 +39,6 @@ O sistema RAG deve sempre priorizar as fontes recuperadas e recusar responder qu
 
 ## Skills do projeto
 
-- `rag-tech-hands-on` — matriz de decisão hands-on vs. automação (complementa as regras acima com o protocolo passo a passo para tarefas guiadas).
+- `rag-tech-hands-on` — protocolo passo a passo (antes/durante/depois) para implementar de forma transparente e colaborativa.
 - `rag-tech-dev-history` — mantém `docs/historico-desenvolvimento.md` como changelog executivo enxuto.
 - `rag-tech-study-docs` — cria notas de estudo em `docs/estudos/` só para dúvidas conceituais profundas.

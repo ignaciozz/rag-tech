@@ -1,38 +1,37 @@
 ---
 name: rag-tech-hands-on
 description: >-
-  Protocolo passo a passo para propor e revisar uma tarefa de código hands-on
-  (quando o usuário vai escrever o código guiado, não a IA). Acionar ao decidir,
-  pela matriz do CLAUDE.md, que a tarefa atual é hands-on para o usuário.
+  Protocolo passo a passo para implementar código de forma transparente e
+  colaborativa: a IA escreve, mas explica antes, caminha pelo código depois e
+  convida revisão. Acionar em qualquer implementação não-trivial no projeto
+  (ou seja, tudo exceto ajustes triviais como typo/lint).
 ---
 
-# RAG Tech Hands-On: Protocolo de Tarefa Guiada
+# RAG Tech Hands-On: Implementação Transparente
 
-Pré-requisito: a decisão de "isso é hands-on ou automação" já foi tomada pela matriz em `CLAUDE.md`. Esta skill cobre **como conduzir** uma tarefa já classificada como hands-on.
+A IA é quem escreve o código. O "hands-on" aqui é sobre o usuário **entender e acompanhar** cada decisão — não sobre digitar a implementação na mão. Ver `CLAUDE.md` para o racional completo.
 
 ---
 
-## Passo 1: Instrução didática e direta
-
-Ao propor a tarefa, entregar nesta ordem:
+## Passo 1: Antes de codar
 
 1. **O que vamos fazer** — objetivo em uma frase simples.
-2. **Conceito-chave** — explicação rápida do conceito novo envolvido (ex.: "o que é um endpoint?", "o que significa `async`?").
-3. **Onde fazer** — caminho completo do arquivo (ex.: `backend/app/api/endpoints/documents.py`).
-4. **Esqueleto com `TODO`** — estrutura pronta (imports, assinatura de função/classe) com comentários indicando exatamente onde o usuário escreve a lógica.
-5. **Dica amigável** — qual função/método usar, com um exemplo curto de sintaxe se ajudar.
+2. **Conceito-chave** — explicação rápida de qualquer conceito novo envolvido (ex.: "o que é um endpoint?", "o que significa `async`?").
+3. **Decisão técnica** — se havia mais de um caminho possível, dizer qual foi escolhido e por quê (mesmo que brevemente).
 
-## Passo 2: Code review educativo
+## Passo 2: Implementar
 
-Quando o usuário enviar o código escrito:
+Escrever o código diretamente nos arquivos do projeto.
 
-1. **Validar e celebrar** o que funcionou antes de apontar problemas.
-2. **Explicar a causa** de qualquer erro ou melhoria de forma clara e construtiva — não só o "o quê", mas o "por quê".
-3. **Testar na hora** — rodar o comando ou abrir o Swagger/navegador para ver a funcionalidade funcionando de fato.
+## Passo 3: Depois de codar
 
-## Anti-stall
+1. **Caminhar pelo código** — explicar o que cada parte faz e como se conecta ao resto do fluxo de dados/arquitetura.
+2. **Testar na hora** — rodar o comando ou abrir o Swagger/navegador para confirmar que funciona de fato.
+3. **Abrir espaço pra revisão** — convidar perguntas e aceitar questionamento das decisões antes de seguir para a próxima peça.
 
-Se o usuário travar em sintaxe ou erro, intervir imediatamente com um exemplo mastigado em vez de deixar a dúvida se arrastar — o objetivo é manter a tração sem pular a etapa de entendimento.
+## Nível de detalhe
+
+Mais explicação nos 20% que trazem 80% do entendimento (lógica de negócio, queries vetoriais, prompts de RAG, decisões de arquitetura); mais breve em boilerplate repetitivo (ex.: a 3ª rota parecida com a anterior) — mas sempre mostrando o que foi feito, nunca pulando a etapa de explicar.
 
 ## Comunicação
 
