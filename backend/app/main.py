@@ -5,7 +5,7 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.db.session import get_db, engine, Base
 from app.db import models  # Importa os modelos para serem registrados no Base
-from app.api.endpoints import documents
+from app.api.endpoints import chat, documents
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -36,6 +36,7 @@ def startup_db():
         print(f"⚠️ Aviso ao inicializar banco de dados: {e}")
 
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
+app.include_router(chat.router, prefix="/api/v1/chat", tags=["Chat"])
 
 @app.get("/health", tags=["Health"])
 async def health_check():
