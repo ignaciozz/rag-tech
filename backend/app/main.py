@@ -5,6 +5,7 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.db.session import get_db, engine, Base
 from app.db import models  # Importa os modelos para serem registrados no Base
+from app.api.endpoints import documents
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -33,6 +34,8 @@ def startup_db():
     except Exception as e:
         print(f"⚠️ Aviso ao verificar extensão pgvector: {e}")
         print(f"⚠️ Aviso ao inicializar banco de dados: {e}")
+
+app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
 
 @app.get("/health", tags=["Health"])
 async def health_check():
