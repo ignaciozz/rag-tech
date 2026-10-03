@@ -42,3 +42,5 @@ O sistema RAG deve sempre priorizar as fontes recuperadas e recusar responder qu
 - `rag-tech-hands-on` — protocolo passo a passo (antes/durante/depois) para implementar de forma transparente e colaborativa.
 - `rag-tech-dev-history` — mantém `docs/historico-desenvolvimento.md` como changelog executivo enxuto.
 - `rag-tech-study-docs` — cria notas de estudo em `docs/estudos/` só para dúvidas conceituais profundas.
+- `rag-tech-frontend-design` — diretrizes de design visual do frontend (minimalista, sem "AI slop").
+- `rag-tech-chat-ui` — padrões técnicos da interface de chat, adaptados ao contrato real do `POST /api/v1/chat`.
