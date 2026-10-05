@@ -66,7 +66,8 @@ Definir 4–6 cores **nomeadas**, com propósito claro — não usar paleta padr
 ## Acessibilidade (checar antes de considerar uma tela "pronta")
 
 - Contraste de texto/fundo compatível com WCAG 2.1 nível AA (mínimo 4.5:1 para texto normal, mínimo 3:1 para ícone/elemento gráfico sozinho — sem texto ao lado).
-- `--color-accent` (`#ed461d`) com branco por cima só passa no mínimo de ícone (3.82:1) — vale pra botão só-ícone (ex: enviar pergunta), nunca pra texto escrito sobre o laranja (ex: "Perguntar"), que precisa de `--color-accent-foreground` (preto, 5.49:1).
+- `--color-accent` (`#ed461d`) com branco por cima só passa no mínimo de ícone (3.82:1), não no de texto (4.5:1) — `--color-accent-foreground` (preto, 5.49:1) é a opção que cumpre AA pra texto.
+  - **Exceção deliberada:** o `Button` primary (`components/atoms/Button.tsx`) usa texto branco mesmo assim (decisão consciente do usuário, 3.82:1) — não "corrigir" isso de volta pra preto sem perguntar primeiro.
 - Toda informação transmitida por cor (ex: cor da citação) também disponível por outro meio (ex: número `[Fonte N]`, não só uma cor de fundo diferente).
 - Elementos interativos (botão de enviar, referências de citação) alcançáveis e operáveis por teclado, com foco visível.
 - Imagens/ícones com texto alternativo quando carregam informação (não decorativos).
