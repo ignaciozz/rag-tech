@@ -1,8 +1,7 @@
 from typing import Any, Dict, List
 
+from app.core.config import settings
 from app.services.embedder import client
-
-CHAT_MODEL = "gpt-4o-mini"
 
 SYSTEM_PROMPT = """Você é um assistente que responde perguntas sobre documentação técnica.
 
@@ -38,7 +37,7 @@ def generate_answer(question: str, chunks: List[Dict[str, Any]]) -> str:
     user_prompt = f"Contexto:\n{context}\n\nPergunta: {question}"
 
     response = client.chat.completions.create(
-        model=CHAT_MODEL,
+        model=settings.CHAT_MODEL,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
