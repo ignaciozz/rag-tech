@@ -8,88 +8,93 @@ Este documento registra a evolução, decisões de arquitetura e passos prático
 
 ### 1. Concepção e Planejamento
 - Leitura e alinhamento com o documento mestre de requisitos e arquitetura ([docs/rag-tech.md](rag-tech.md)).
-- Definição do escopo do MVP focado em: Ingestão de Documentos, Embeddings, Busca Vetorial com pgvector, RAG Grounded e Interface de Chat com Citações.
-- Criação das skills do assistente em `.agents/skills/`:
-  - `rag-tech-mentor`: Mentor didático para guiar desenvolvimento e aprendizado.
-  - `rag-tech-hands-on`: Metodologia de aprendizagem prática e ágil (First-Time Rule, Pareto 80/20).
-  - `rag-tech-study-docs`: Gerador de notas conceituais essenciais em `docs/estudos/`.
-  - `rag-tech-dev-history`: Mantenedor conciso e estruturado deste histórico.
+- Escopo do MVP definido: Ingestão de Documentos, Embeddings, Busca Vetorial com pgvector, RAG Grounded e Interface de Chat com Citações.
+- Instruções permanentes do assistente centralizadas em [CLAUDE.md](../CLAUDE.md) (perfil do usuário, protocolo hands-on, objetivos de aprendizado); skills específicas em [.claude/skills/](../.claude/skills/) (`rag-tech-dev-history`, `rag-tech-study-docs`, `rag-tech-hands-on`, `rag-tech-frontend-design`, `rag-tech-chat-ui`).
 
----
+### 2. Estrutura de Pastas e Arquitetura
+- Arquitetura em Camadas (Layered Architecture) modular no backend: `api/`, `core/`, `db/`, `schemas/`, `services/`.
+- Frontend em Next.js com Atomic Design: `components/{atoms,molecules,organisms,templates}/`.
 
-### 2. Estrutura de Pastas e Arquitetura do Projeto
-Foi estabelecida uma **Arquitetura em Camadas (Layered Architecture)** modular:
-- Estabelecida **Arquitetura em Camadas (Layered Architecture)** modular (`api/`, `core/`, `db/`, `schemas/`, `services/`).
+### 3. Infraestrutura com Docker
+- [docker-compose.yml](../docker-compose.yml) com imagem `pgvector/pgvector:pg16`, volume persistente `postgres_data` e healthcheck (`pg_isready`).
+- Container `rag_tech_postgres` validado na porta 5432.
 
-```text
-rag-tech/
-├── .agents/                    # Configurações e skills do assistente Antigravity
-├── docs/                       # Documentações, especificações e notas de estudo
-│   ├── estudos/                # Pílulas conceituais e materiais de fixação
-│   ├── historico-desenvolvimento.md
-│   └── rag-tech.md
-├── backend/                    # Servidor Python com FastAPI
-│   ├── app/
-│   │   ├── api/                # Endpoints HTTP da API
-│   │   ├── core/               # Configurações globais e leitura do .env
-│   │   ├── db/                 # Conexão e modelos do banco PostgreSQL/pgvector
-│   │   ├── schemas/            # Contratos e validações Pydantic
-│   │   ├── services/           # Regras de negócio (RAG, Embeddings, Ingestão)
-│   │   └── main.py             # Ponto de entrada da aplicação
-│   ├── migrations/             # Migrações do banco (Alembic)
-│   └── requirements.txt        # Dependências Python
-├── frontend/                   # Interface web com Next.js
-├── docker-compose.yml          # Container do PostgreSQL 16 + pgvector
-├── .env.example                # Template de variáveis de ambiente
-├── .gitignore                  # Arquivos ignorados pelo Git
-└── README.md                   # Apresentação do repositório
-```
-
----
-
-### 3. Infraestrutura de Banco de Dados com Docker
-- Criação do [docker-compose.yml](../docker-compose.yml) utilizando a imagem oficial `pgvector/pgvector:pg16`.
-- Configuração de volume persistente `postgres_data` para retenção dos dados.
-- Mapeamento de porta `5432:5432` e healthcheck com `pg_isready`.
-- Inicialização com sucesso via `docker compose up -d` (Container `rag_tech_postgres` ativo).
-### 3. Infraestrutura e Banco de Dados com Docker
-- Configurado [docker-compose.yml](../docker-compose.yml) com imagem `pgvector/pgvector:pg16` e volume persistente.
-- Inicialização com sucesso via `docker compose up -d` (Container `rag_tech_postgres` ativo na porta 5432).
-
----
-
-### 4. Configuração do Ambiente Python
-- Criação do [backend/requirements.txt](../backend/requirements.txt) contendo FastAPI, SQLAlchemy, psycopg v3, pgvector, OpenAI, pypdf e utilitários.
-- Criação e ativação do ambiente virtual isolado `.venv`.
-- Instalação das dependências com `pip install -r backend/requirements.txt`.
-### 4. Ambiente Python e Conexão Backend
-- Dependências instaladas via `.venv` a partir de [backend/requirements.txt](../backend/requirements.txt).
+### 4. Ambiente Python e Conexão com o Banco
+- Dependências via `.venv` a partir de [backend/requirements.txt](../backend/requirements.txt).
 - Configurações centralizadas com `pydantic-settings` em [backend/app/core/config.py](../backend/app/core/config.py).
-- Conexão ORM e injeção de dependência em [backend/app/db/session.py](../backend/app/db/session.py).
-- Ativação e verificação do `pgvector (v0.8.6)` e rotas de `/health` e `/health/db` em [backend/app/main.py](../backend/app/main.py).
+- Engine SQLAlchemy e injeção de dependência (`get_db`) em [backend/app/db/session.py](../backend/app/db/session.py).
+- Extensão `pgvector` ativada e validada; rotas `/health` e `/health/db` em [backend/app/main.py](../backend/app/main.py).
 
 ---
 
-### 5. Configurações Globais e Conexão com o Banco de Dados
-- Implementação de [backend/app/core/config.py](../backend/app/core/config.py) utilizando `pydantic-settings` para carregamento seguro do `.env`.
-- Implementação de [backend/app/db/session.py](../backend/app/db/session.py) gerenciando o `engine` SQLAlchemy e o gerador de sessões `get_db`.
-- Atualização de [backend/app/main.py](../backend/app/main.py) com rotas `/health` e `/health/db`.
-- **Validação:** Ativação e verificação da extensão `pgvector (v0.8.6)` no PostgreSQL com teste automatizado executado com sucesso.
 ## 📅 Fase 2: Processamento de Documentos & Ingestão
 
-### 1. Modelagem Relacional & Vetorial (Hands-On)
-- Criação de [backend/app/db/models.py](../backend/app/db/models.py) contendo os modelos ORM:
-  - `Document`: Tabela pai para metadados de arquivos (título, tecnologia, versão, tipo, data).
-  - `DocumentChunk`: Tabela filha para blocos de texto (`content`), índice sequencial (`chunk_index`), página (`page_number`) e vetor `Vector(1536)` do pgvector com chave estrangeira em cascata.
-- **Validação:** Criação automática das tabelas `documents` e `document_chunks` no PostgreSQL via `Base.metadata.create_all` executada com sucesso.
+### 1. Modelagem Relacional & Vetorial
+- [backend/app/db/models.py](../backend/app/db/models.py): `Document` (metadados do arquivo) e `DocumentChunk` (texto, `chunk_index`, `page_number`, `embedding Vector(1536)`, FK em cascata).
+
+### 2. Extração de Texto
+- [backend/app/services/extractor.py](../backend/app/services/extractor.py): extração para `.txt`/`.md` (decode UTF-8), `.pdf` (pypdf, por página) e `.docx` (python-docx), unificados no mesmo formato de saída `{page_number, text}`.
+
+### 3. Chunking
+- [backend/app/services/chunker.py](../backend/app/services/chunker.py): divisão por **tokens** (não caracteres) com `tiktoken` (encoding `cl100k_base`), `chunk_size=500`/`overlap=75`, preservando `page_number` de origem.
+
+### 4. Endpoint de Upload
+- [backend/app/schemas/document.py](../backend/app/schemas/document.py): `DocumentResponse`, `EmbedResponse`.
+- [backend/app/api/endpoints/documents.py](../backend/app/api/endpoints/documents.py): `POST /api/v1/documents/upload` — extrai, chunka e persiste `Document` + `DocumentChunk` (embedding `NULL` nesta fase, por decisão de desacoplar upload da chamada à IA).
+- **Validado:** upload real de `.txt`, documento e chunks confirmados no Postgres.
 
 ---
 
-### 🎯 Próximos Passos (Início da Fase 2 — Processamento de Documentos):
-1. Modelagem das tabelas no banco de dados (`Document` e `DocumentChunk`) usando SQLAlchemy + pgvector.
-2. Criação do serviço de extração e limpeza de texto (`app/services/document_service.py`) para PDF, DOCX, TXT e Markdown.
-3. Criação da estratégia de *Chunking* (divisão em blocos de texto com sobreposição/overlap).
+## 📅 Fase 3: Embeddings
+
+### 1. Geração e Armazenamento
+- [backend/app/services/embedder.py](../backend/app/services/embedder.py): `generate_embeddings()` em lote, `dimensions=1536` (compatível com a coluna `Vector(1536)`).
+- `POST /api/v1/documents/{id}/embed` em [documents.py](../backend/app/api/endpoints/documents.py): busca chunks com `embedding IS NULL` e preenche o vetor.
+- **Validado de ponta a ponta com o Gemini:** embedding real gerado e salvo com 1536 dimensões confirmadas via `vector_dims()` no Postgres.
+
+---
+
+## 📅 Fase 4: RAG (Retrieval-Augmented Generation)
+
+### 1. Busca Semântica
+- [backend/app/services/retriever.py](../backend/app/services/retriever.py): `retrieve_relevant_chunks()` — embedding da pergunta + busca Top-K por distância de cosseno (`cosine_distance` do pgvector), join com `Document` para título/tecnologia.
+
+### 2. Geração Fundamentada (Grounded QA)
+- [backend/app/services/rag.py](../backend/app/services/rag.py): `build_context()` formata os chunks como `[Fonte N — título, página X]`; `generate_answer()` monta o prompt fundamentado (regras: responder só com o contexto, citar `[Fonte N]`, recusar se não houver evidência) e chama o LLM com `temperature=0`.
+- [backend/app/schemas/chat.py](../backend/app/schemas/chat.py) + `POST /api/v1/chat` em [backend/app/api/endpoints/chat.py](../backend/app/api/endpoints/chat.py).
+- **Validado de ponta a ponta com o Gemini:** pergunta real → resposta fundamentada com citação `[Fonte 1]` correta.
+
+### 3. Provedor de IA configurável
+- [backend/app/core/config.py](../backend/app/core/config.py): `AI_API_KEY`/`AI_BASE_URL`/`EMBEDDING_MODEL`/`CHAT_MODEL` generalizados (compatíveis com o SDK da OpenAI) em vez de hardcoded — permite trocar de provedor só pelo `.env`, sem tocar em código.
+- [.env.example](../.env.example) documenta duas opções lado a lado: **Gemini** (gratuito, sem cartão, padrão) e **OpenAI** (paga, comentada). Troca é manual — ver decisão registrada de não fazer fallback automático de embeddings (vetores de provedores diferentes não são comparáveis entre si; fallback automático só faria sentido para o chat, não para embeddings).
+
+---
+
+## 📅 Frontend: Design System & Interface de Chat
+
+### 1. Scaffold Next.js
+- `create-next-app` em [frontend/](../frontend/): TypeScript, Tailwind v4, App Router.
+
+### 2. Design System
+- Tokens em [frontend/app/globals.css](../frontend/app/globals.css): paleta preto/branco/laranja (`#ed461d` como acento mínimo), modo claro/escuro via `next-themes`, escala de raio (sm/md/lg/xl) e sombra `shadow-soft`, fonte Poppins.
+- Diretrizes documentadas em [.claude/skills/rag-tech-frontend-design/SKILL.md](../.claude/skills/rag-tech-frontend-design/SKILL.md), incluindo notas de contraste WCAG AA (texto vs. ícone sobre o laranja) e exceções deliberadas registradas.
+- Styleguide viva em `/styleguide` ([frontend/app/styleguide/page.tsx](../frontend/app/styleguide/page.tsx)), renderizando os componentes reais.
+
+### 3. Componentes em Atomic Design
+- Átomos: `Button`, `IconButton`, `Badge`, `CloseButton`, `ThemeToggle`.
+- Moléculas: `UserMessage`, `AssistantMessage` (parse de `[Fonte N]`), `ChatInput`, `ErrorBanner`.
+- Organismos: `ChatHeader`, `ChatMessageList`, `ChatWindow`.
+- Template: `ChatPageTemplate`.
+- Convenções de interação documentadas em [.claude/skills/rag-tech-chat-ui/SKILL.md](../.claude/skills/rag-tech-chat-ui/SKILL.md).
+
+### 4. Conexão com a API
+- [frontend/lib/api.ts](../frontend/lib/api.ts): `askQuestion()` chama `POST /api/v1/chat` de verdade.
+- `ChatWindow` com estado real (histórico em memória, loading, erro com "Tente novamente" reenviando só a última pergunta).
+
+---
+
 ### 🎯 Próximos Passos Imediatos:
-1. Criação dos schemas Pydantic de validação de dados em `backend/app/schemas/document.py`.
-2. Criação do serviço de extração de texto em `backend/app/services/extractor.py` (PDF, DOCX, TXT, MD).
-3. Implementação do algoritmo de *Chunking* com overlap em `backend/app/services/chunker.py`.
+1. UI de upload de documentos no frontend (hoje só existe via Swagger/curl).
+2. Tratamento de erro específico no backend para falhas do provedor de IA (hoje cai em `500` genérico).
+3. Testes automatizados (`pytest` no backend).
+4. Avaliação de qualidade das respostas do RAG.
