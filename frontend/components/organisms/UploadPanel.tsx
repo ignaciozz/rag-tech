@@ -178,9 +178,22 @@ export function UploadPanel() {
                 </p>
                 <button
                   onClick={handleReset}
-                  className="cursor-pointer text-xs text-muted underline underline-offset-2 hover:text-foreground"
+                  className="flex cursor-pointer items-center gap-1.5 text-xs text-muted underline underline-offset-2 hover:text-foreground"
                 >
                   Enviar outro documento
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.25"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="8 8 4 12 8 16" />
+                    <polyline points="4 12 14 12 14 5" />
+                  </svg>
                 </button>
               </div>
             )}
