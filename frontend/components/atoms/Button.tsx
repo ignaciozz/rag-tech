@@ -10,7 +10,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const base =
-    "rounded-md px-4 py-2 text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed";
+    "cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40";
   const variants = {
     // Exceção deliberada de contraste: branco sobre --color-accent dá 3.82:1,
     // abaixo do mínimo AA de 4.5:1 para texto. Aceito conscientemente — ver

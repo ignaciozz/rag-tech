@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/atoms/Button";
 import { IconButton } from "@/components/atoms/IconButton";
 import { Badge } from "@/components/atoms/Badge";
@@ -5,7 +7,7 @@ import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { UserMessage } from "@/components/molecules/UserMessage";
 import { AssistantMessage } from "@/components/molecules/AssistantMessage";
 import { ChatInput } from "@/components/molecules/ChatInput";
-import { ChatHeader } from "@/components/organisms/ChatHeader";
+import { AppHeader } from "@/components/organisms/AppHeader";
 
 function Section({
   title,
@@ -154,9 +156,9 @@ export default function Styleguide() {
         <ChatInput onSend={() => {}} />
       </Section>
 
-      <Section title="Organismos — ChatHeader">
+      <Section title="Organismos — AppHeader">
         <div className="overflow-hidden rounded-lg border border-border">
-          <ChatHeader />
+          <AppHeader navLabel="Chat" navHref="/chat" />
         </div>
       </Section>
 

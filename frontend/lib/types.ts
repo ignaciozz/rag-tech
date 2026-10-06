@@ -10,3 +10,12 @@ export type Message = {
   content: string;
   sources?: Source[];
 };
+
+export type DocumentInfo = {
+  id: string;
+  title: string;
+  technology: string;
+  version: string | null;
+  fileType: string;
+  chunksCount: number;
+};

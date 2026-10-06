@@ -1,18 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { ChatHeader } from "@/components/organisms/ChatHeader";
+import { useState, MouseEvent } from "react";
+import { useRouter } from "next/navigation";
+import { AppHeader } from "@/components/organisms/AppHeader";
 import { ChatMessageList } from "@/components/organisms/ChatMessageList";
 import { ChatInput } from "@/components/molecules/ChatInput";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner";
+import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import { askQuestion } from "@/lib/api";
 import type { Message } from "@/lib/types";
 
 export function ChatWindow() {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastQuestion, setLastQuestion] = useState<string | null>(null);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   async function fetchAnswer(question: string) {
     setError(null);
@@ -46,9 +50,29 @@ export function ChatWindow() {
     if (lastQuestion) fetchAnswer(lastQuestion);
   }
 
+  // Só interrompe a navegação se houver conversa de verdade a perder —
+  // chat vazio pode navegar direto, sem incomodar com um modal à toa.
+  function handleNavClick(e: MouseEvent<HTMLAnchorElement>) {
+    if (messages.length > 0) {
+      e.preventDefault();
+      setShowLeaveConfirm(true);
+    }
+  }
+
   return (
     <div className="flex h-[680px] w-[820px] flex-col overflow-hidden rounded-xl border border-border bg-background shadow-soft">
-      <ChatHeader />
+      <AppHeader navLabel="Documentos" navHref="/" onNavClick={handleNavClick} />
+
+      {showLeaveConfirm && (
+        <ConfirmDialog
+          title="Sair da conversa?"
+          message="O chat atual será perdido ao sair desta tela."
+          confirmLabel="Sair mesmo assim"
+          cancelLabel="Continuar aqui"
+          onConfirm={() => router.push("/")}
+          onCancel={() => setShowLeaveConfirm(false)}
+        />
+      )}
 
       {messages.length === 0 && !isLoading ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-1 px-7 text-center">

@@ -1,6 +1,26 @@
-import type { Source } from "@/lib/types";
+import type { DocumentInfo, Source } from "@/lib/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const TIMEOUT_MS = 30_000;
+
+// fetch() não tem timeout embutido — sem isso, se o backend cair ou travar
+// no meio de uma requisição, a Promise nunca resolve nem rejeita, e a UI
+// fica presa num estado de carregamento pra sempre, sem erro nenhum.
+async function fetchWithTimeout(input: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error("O servidor demorou demais para responder.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export type ChatResponse = {
   answer: string;
@@ -8,7 +28,7 @@ export type ChatResponse = {
 };
 
 export async function askQuestion(question: string): Promise<ChatResponse> {
-  const response = await fetch(`${API_URL}/api/v1/chat`, {
+  const response = await fetchWithTimeout(`${API_URL}/api/v1/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question }),
@@ -31,4 +51,48 @@ export async function askQuestion(question: string): Promise<ChatResponse> {
   );
 
   return { answer: data.answer, sources };
+}
+
+export async function uploadDocument(
+  file: File,
+  technology: string,
+  version: string,
+): Promise<DocumentInfo> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("technology", technology);
+  if (version) formData.append("version", version);
+
+  const response = await fetchWithTimeout(`${API_URL}/api/v1/documents/upload`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Falha no upload (${response.status}).`);
+  }
+
+  const data = await response.json();
+  return {
+    id: data.id,
+    title: data.title,
+    technology: data.technology,
+    version: data.version,
+    fileType: data.file_type,
+    chunksCount: data.chunks_count,
+  };
+}
+
+export async function embedDocument(documentId: string): Promise<number> {
+  const response = await fetchWithTimeout(
+    `${API_URL}/api/v1/documents/${documentId}/embed`,
+    { method: "POST" },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Falha ao gerar embeddings (${response.status}).`);
+  }
+
+  const data = await response.json();
+  return data.chunks_embedded;
 }

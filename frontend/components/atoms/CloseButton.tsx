@@ -8,7 +8,7 @@ export function CloseButton({ className = "", ...props }: CloseButtonProps) {
   return (
     <button
       // Neutro, nunca laranja — fechar não é a ação primária da tela.
-      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-foreground ${className}`}
+      className={`flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-foreground ${className}`}
       {...props}
     >
       <svg
