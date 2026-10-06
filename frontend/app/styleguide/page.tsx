@@ -151,7 +151,7 @@ export default function Styleguide() {
       </Section>
 
       <Section title="Moléculas — ChatInput">
-        <ChatInput />
+        <ChatInput onSend={() => {}} />
       </Section>
 
       <Section title="Organismos — ChatHeader">
