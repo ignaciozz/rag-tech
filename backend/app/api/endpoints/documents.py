@@ -3,6 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import AIProviderError
 from app.db.models import Document, DocumentChunk
 from app.db.session import get_db
 from app.schemas.document import DocumentResponse, EmbedResponse
@@ -95,7 +96,10 @@ def embed_document(document_id: uuid.UUID, db: Session = Depends(get_db)):
         )
 
     texts = [chunk.content for chunk in chunks]
-    embeddings = generate_embeddings(texts)
+    try:
+        embeddings = generate_embeddings(texts)
+    except AIProviderError as error:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(error))
 
     for chunk, embedding in zip(chunks, embeddings):
         chunk.embedding = embedding

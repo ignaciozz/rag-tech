@@ -1,6 +1,9 @@
 from typing import Any, Dict, List
 
+import openai
+
 from app.core.config import settings
+from app.core.exceptions import translate_openai_error
 from app.services.embedder import client
 
 SYSTEM_PROMPT = """Você é um assistente que responde perguntas sobre documentação técnica.
@@ -36,13 +39,16 @@ def generate_answer(question: str, chunks: List[Dict[str, Any]]) -> str:
     context = build_context(chunks)
     user_prompt = f"Contexto:\n{context}\n\nPergunta: {question}"
 
-    response = client.chat.completions.create(
-        model=settings.CHAT_MODEL,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
-        temperature=0,
-    )
+    try:
+        response = client.chat.completions.create(
+            model=settings.CHAT_MODEL,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0,
+        )
+    except openai.APIError as error:
+        raise translate_openai_error(error) from error
 
     return response.choices[0].message.content

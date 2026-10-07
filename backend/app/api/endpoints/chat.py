@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import AIProviderError
 from app.db.session import get_db
 from app.schemas.chat import ChatRequest, ChatResponse, SourceInfo
 from app.services.rag import generate_answer
@@ -15,8 +16,11 @@ def ask_question(payload: ChatRequest, db: Session = Depends(get_db)):
     Pipeline de RAG completo: busca os chunks mais relevantes para a
     pergunta, monta o contexto e gera uma resposta fundamentada e citada.
     """
-    chunks = retrieve_relevant_chunks(db, payload.question)
-    answer = generate_answer(payload.question, chunks)
+    try:
+        chunks = retrieve_relevant_chunks(db, payload.question)
+        answer = generate_answer(payload.question, chunks)
+    except AIProviderError as error:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(error))
 
     sources = [
         SourceInfo(
