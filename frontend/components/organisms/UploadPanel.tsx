@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, KeyboardEvent } from "react";
-import { useRouter } from "next/navigation";
-import { AppHeader } from "@/components/organisms/AppHeader";
 import { Dropzone } from "@/components/molecules/Dropzone";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner";
 import { ProgressBar } from "@/components/atoms/ProgressBar";
@@ -38,8 +36,7 @@ function ArrowIcon() {
   );
 }
 
-export function UploadPanel() {
-  const router = useRouter();
+export function UploadPanel({ onUploaded }: { onUploaded?: () => void }) {
   const [stage, setStage] = useState<Stage>("idle");
   const [file, setFile] = useState<File | null>(null);
   const [technology, setTechnology] = useState("");
@@ -62,6 +59,7 @@ export function UploadPanel() {
       const chunksEmbedded = await embedDocument(id);
       setLastResult({ title, chunksEmbedded });
       setStage("done");
+      onUploaded?.();
     } catch {
       setErrorStep("embed");
       setError("Documento salvo, mas não consegui gerar os embeddings.");
@@ -100,13 +98,9 @@ export function UploadPanel() {
     setDocumentId(null);
   }
 
-  // O mesmo botão de seta muda de função conforme a etapa: confirma a
-  // tecnologia e dispara o processamento, ou — já concluído — leva ao chat.
   function handleArrowClick() {
-    if (stage === "configuring" && file && technology.trim()) {
+    if (file && technology.trim()) {
       runUpload(file, technology.trim());
-    } else if (stage === "done") {
-      router.push("/chat");
     }
   }
 
@@ -115,99 +109,92 @@ export function UploadPanel() {
   }
 
   const isBusy = stage === "uploading" || stage === "embedding";
-  const arrowEnabled =
-    (stage === "configuring" && !!file && !!technology.trim()) || stage === "done";
+  const showForm = stage === "configuring" || isBusy;
 
   return (
-    <div className="flex h-[680px] w-[820px] flex-col overflow-hidden rounded-xl border border-border bg-background shadow-soft">
-      <AppHeader />
-
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 px-10">
-        <div className="text-center">
-          <h1 className="text-lg font-semibold tracking-tight">
-            Adicionar documentação
-          </h1>
-          <p className="mt-1 text-xs text-muted">
-            Envie um arquivo para poder fazer perguntas sobre ele no chat.
-          </p>
-        </div>
-
-        {stage === "idle" && <Dropzone onFile={handleFile} />}
-
-        {stage !== "idle" && (
-          <div className="w-full max-w-sm flex flex-col gap-3">
-            <p className="truncate text-center text-xs text-muted">
-              {file?.name}
-            </p>
-            <ProgressBar percent={PROGRESS[stage]} />
-
-            {stage !== "error" && (
-              <div className="flex items-center gap-2">
-                <input
-                  autoFocus={stage === "configuring"}
-                  type="text"
-                  value={technology}
-                  onChange={(e) => setTechnology(e.target.value)}
-                  onKeyDown={handleInputKeyDown}
-                  disabled={stage !== "configuring"}
-                  placeholder="Qual tecnologia?"
-                  className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted focus:outline-none disabled:opacity-60"
-                />
-                <IconButton
-                  aria-label={stage === "done" ? "Ir para o chat" : "Confirmar tecnologia"}
-                  disabled={!arrowEnabled}
-                  onClick={handleArrowClick}
-                >
-                  <ArrowIcon />
-                </IconButton>
-              </div>
-            )}
-
-            {isBusy && (
-              <p className="animate-pulse text-center text-xs text-muted" aria-live="polite">
-                {stage === "uploading"
-                  ? "Extraindo e salvando texto..."
-                  : "Gerando embeddings..."}
-              </p>
-            )}
-
-            {stage === "done" && lastResult && (
-              <div className="flex flex-col items-center gap-2 text-center">
-                <p className="text-xs text-muted">
-                  {lastResult.chunksEmbedded} trecho(s) prontos para consulta.
-                </p>
-                <button
-                  onClick={handleReset}
-                  className="flex cursor-pointer items-center gap-1.5 text-xs text-muted underline underline-offset-2 hover:text-foreground"
-                >
-                  Enviar outro documento
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.25"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="8 8 4 12 8 16" />
-                    <polyline points="4 12 14 12 14 5" />
-                  </svg>
-                </button>
-              </div>
-            )}
-
-            {stage === "error" && error && (
-              <ErrorBanner
-                message={error}
-                onRetry={handleRetry}
-                onClose={() => setError(null)}
-              />
-            )}
-          </div>
-        )}
+    <div className="flex flex-col items-center gap-5 px-10 py-8">
+      <div className="text-center">
+        <h1 className="text-lg font-semibold tracking-tight">
+          Adicionar documentação
+        </h1>
+        <p className="mt-1 text-xs text-muted">
+          Envie um arquivo para poder fazer perguntas sobre ele no chat.
+        </p>
       </div>
+
+      {stage === "idle" && <Dropzone onFile={handleFile} />}
+
+      {stage !== "idle" && (
+        <div className="w-full max-w-sm flex flex-col gap-3">
+          <p className="truncate text-center text-xs text-muted">{file?.name}</p>
+          <ProgressBar percent={PROGRESS[stage]} />
+
+          {showForm && (
+            <div className="flex items-center gap-2">
+              <input
+                autoFocus={stage === "configuring"}
+                type="text"
+                value={technology}
+                onChange={(e) => setTechnology(e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                disabled={isBusy}
+                placeholder="Qual tecnologia?"
+                className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted focus:outline-none disabled:opacity-60"
+              />
+              <IconButton
+                aria-label="Confirmar tecnologia"
+                disabled={isBusy || !file || !technology.trim()}
+                onClick={handleArrowClick}
+              >
+                <ArrowIcon />
+              </IconButton>
+            </div>
+          )}
+
+          {isBusy && (
+            <p className="animate-pulse text-center text-xs text-muted" aria-live="polite">
+              {stage === "uploading"
+                ? "Extraindo e salvando texto..."
+                : "Gerando embeddings..."}
+            </p>
+          )}
+
+          {stage === "done" && lastResult && (
+            <div className="flex flex-col items-center gap-2 text-center">
+              <p className="text-xs text-muted">
+                {lastResult.chunksEmbedded} trecho(s) prontos para consulta.
+              </p>
+              <button
+                onClick={handleReset}
+                className="flex cursor-pointer items-center gap-1.5 text-xs text-muted underline underline-offset-2 hover:text-foreground"
+              >
+                Enviar outro documento
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.25"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="8 8 4 12 8 16" />
+                  <polyline points="4 12 14 12 14 5" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {stage === "error" && error && (
+            <ErrorBanner
+              message={error}
+              onRetry={handleRetry}
+              onClose={() => setError(null)}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

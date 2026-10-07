@@ -1,10 +1,10 @@
 import { ChatPageTemplate } from "@/components/templates/ChatPageTemplate";
-import { UploadPanel } from "@/components/organisms/UploadPanel";
+import { DocumentManager } from "@/components/organisms/DocumentManager";
 
 export default function Home() {
   return (
     <ChatPageTemplate>
-      <UploadPanel />
+      <DocumentManager />
     </ChatPageTemplate>
   );
 }

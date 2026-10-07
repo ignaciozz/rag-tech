@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     # PostgreSQL / pgvector
     DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@localhost:5432/rag_tech_docs"
 
+    # Onde os arquivos originais enviados ficam salvos (pra download depois).
+    UPLOADS_DIR: Path = BASE_DIR / "backend" / "uploads"
+
     model_config = SettingsConfigDict(
         env_file=ENV_FILE if ENV_FILE.exists() else ".env",
         env_file_encoding="utf-8",

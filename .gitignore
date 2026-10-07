@@ -27,6 +27,9 @@ yarn-error.log*
 postgres_data/
 *.sqlite3
 
+# Arquivos originais enviados pelos usuários (conteúdo, não código)
+backend/uploads/
+
 # IDEs e Editores
 .vscode/
 .idea/

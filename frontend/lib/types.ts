@@ -19,3 +19,13 @@ export type DocumentInfo = {
   fileType: string;
   chunksCount: number;
 };
+
+export type DocumentListItem = {
+  id: string;
+  title: string;
+  technology: string;
+  version: string | null;
+  fileType: string;
+  totalChunks: number;
+  embeddedChunks: number;
+};
