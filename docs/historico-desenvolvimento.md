@@ -117,3 +117,5 @@ Este documento registra a evolução, decisões de arquitetura e passos prático
 1. Tela de gerenciamento de documentos (listar/apagar os já cadastrados — hoje só dá pra consultar via `psql`/Swagger).
 2. Dockerizar backend e frontend (hoje só o Postgres está no `docker-compose.yml`).
 3. Avaliação de qualidade das respostas do RAG.
+4. UX e refinos finais.
+5. Garantir ambiente pronto para open source (README, documentação, etc.) — o projeto é portfólio público no GitHub, outros devs precisam conseguir clonar, configurar e rodar sem fricção.
