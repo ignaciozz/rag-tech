@@ -81,20 +81,39 @@ Este documento registra a evolução, decisões de arquitetura e passos prático
 - Styleguide viva em `/styleguide` ([frontend/app/styleguide/page.tsx](../frontend/app/styleguide/page.tsx)), renderizando os componentes reais.
 
 ### 3. Componentes em Atomic Design
-- Átomos: `Button`, `IconButton`, `Badge`, `CloseButton`, `ThemeToggle`.
-- Moléculas: `UserMessage`, `AssistantMessage` (parse de `[Fonte N]`), `ChatInput`, `ErrorBanner`.
-- Organismos: `ChatHeader`, `ChatMessageList`, `ChatWindow`.
+- Átomos: `Button`, `IconButton`, `Badge`, `CloseButton`, `ThemeToggle` (ícone sol/lua), `ProgressBar`.
+- Moléculas: `UserMessage`, `AssistantMessage` (parse de `[Fonte N]`), `ChatInput`, `ErrorBanner` (com "Tente novamente"), `ConfirmDialog`, `Dropzone`.
+- Organismos: `AppHeader` (compartilhado, navegação opcional com interceptação de clique), `ChatMessageList`, `ChatWindow`, `UploadPanel`.
 - Template: `ChatPageTemplate`.
 - Convenções de interação documentadas em [.claude/skills/rag-tech-chat-ui/SKILL.md](../.claude/skills/rag-tech-chat-ui/SKILL.md).
 
 ### 4. Conexão com a API
-- [frontend/lib/api.ts](../frontend/lib/api.ts): `askQuestion()` chama `POST /api/v1/chat` de verdade.
-- `ChatWindow` com estado real (histórico em memória, loading, erro com "Tente novamente" reenviando só a última pergunta).
+- [frontend/lib/api.ts](../frontend/lib/api.ts): `askQuestion()`, `uploadDocument()`, `embedDocument()` chamam a API de verdade, com timeout de 30s (`AbortController`) pra nunca ficar pendurado indefinidamente se o backend cair no meio de uma requisição.
+- `ChatWindow` com estado real (histórico em memória, loading, erro com "Tente novamente" reenviando só a última pergunta); modal de confirmação (`ConfirmDialog`) ao navegar pra fora do chat com conversa em andamento.
+
+### 5. Tela de Upload (`/`, rota inicial)
+- `UploadPanel`: fluxo central único — `Dropzone` (clicar/arrastar) → campo de tecnologia inline → `ProgressBar` em etapas reais (20% selecionado → 60% upload → 90% embedding → 100% concluído), sem animação falsa de bytes.
+- Orquestra no frontend o que o backend expõe como 2 chamadas separadas: `uploadDocument()` seguido de `embedDocument()` automaticamente — e com retry por etapa (se só o embedding falhar, tenta de novo sem reenviar o arquivo).
+- Botão de ação (seta) muda de função por etapa: confirma tecnologia → vira "ir para o chat" quando concluído.
+- Rotas: `/` = upload (entrada), `/chat` = conversa.
+
+---
+
+## 📅 Qualidade: Tratamento de Erros & Testes Automatizados
+
+### 1. Erros do Provedor de IA
+- [backend/app/core/exceptions.py](../backend/app/core/exceptions.py): `AIProviderError` + `translate_openai_error()` — traduz exceções do SDK da OpenAI (`AuthenticationError`, `RateLimitError`, `NotFoundError`, `APIConnectionError`, `InternalServerError`, `BadRequestError`) em mensagens acionáveis.
+- `embedder.py` e `rag.py` capturam `openai.APIError` e relançam como `AIProviderError`, sem acoplar os services ao FastAPI; os endpoints (`/embed`, `/chat`) traduzem isso para `502 Bad Gateway`, no lugar do `500` genérico de antes.
+- **Validado com 3 cenários reais:** chave inválida, provedor sobrecarregado (`503` do Gemini capturado ao vivo durante o teste) e caminho feliz restaurado — sem regressão.
+
+### 2. Suíte de Testes (`pytest`)
+- [backend/tests/](../backend/tests/): banco de teste dedicado (`rag_tech_docs_test`, mesmo Postgres), truncado entre testes; `TestClient` do FastAPI com `get_db` sobrescrito; mocks do cliente de IA via fábricas de fixture (`mock_embeddings`, `mock_chat`) — zero chamada de rede real, suíte inteira roda em <1s.
+- 25 testes: `chunker` (5), `extractor` (6), `embedder` (2), `rag` (3), API de documentos (6), API de chat (3).
+- Cobre inclusive o tratamento de erro do item acima, de ponta a ponta pela API.
 
 ---
 
 ### 🎯 Próximos Passos Imediatos:
-1. UI de upload de documentos no frontend (hoje só existe via Swagger/curl).
-2. Tratamento de erro específico no backend para falhas do provedor de IA (hoje cai em `500` genérico).
-3. Testes automatizados (`pytest` no backend).
-4. Avaliação de qualidade das respostas do RAG.
+1. Tela de gerenciamento de documentos (listar/apagar os já cadastrados — hoje só dá pra consultar via `psql`/Swagger).
+2. Dockerizar backend e frontend (hoje só o Postgres está no `docker-compose.yml`).
+3. Avaliação de qualidade das respostas do RAG.
