@@ -118,10 +118,10 @@ Este documento registra a evolução, decisões de arquitetura e passos prático
 
 ### 3. Limites do Provedor de IA (descobertos em uso real)
 - **Bug real no frontend:** "Tente novamente" não fazia nada quando o *primeiro* embedding falhava — a função de retry dependia de um estado (`lastResult`) que só era preenchido em caso de sucesso. Corrigido guardando o título do documento assim que o upload termina, independente do embedding dar certo.
-- **Limite de 100 itens por lote:** a API do Gemini rejeita mais de 100 textos numa chamada de embedding (`BatchEmbedContentsRequest`). [embedder.py](../backend/app/services/embedder.py) agora divide em lotes automaticamente.
-- **Limite de 30k tokens/minuto (tier gratuito):** o limite real não é a contagem de itens, é tokens — um lote de 100 chunks de ~500 tokens passa fácil de 30k numa chamada só, e isso **não se resolve só com retry** (a mesma chamada grande demais esbarra de novo). `MAX_BATCH_SIZE` reduzido para 50, mais uma pausa curta entre lotes (`INTER_BATCH_DELAY_SECONDS`).
-- Retry com backoff exponencial especificamente para `RateLimitError` (`MAX_RATE_LIMIT_RETRIES`), separado de outros erros (que falham na hora, sem tentar de novo).
-- **Decisão registrada:** essa é uma limitação do tier *gratuito* do Gemini (30k tokens/min), não um limite genérico do projeto — uma chave paga (Gemini ou OpenAI) não esbarraria nisso para documentos desse tamanho. Não vale investir mais tempo ajustando esses números agora.
+- **Bug real no frontend:** a lista de documentos só atualizava sozinha quando o embedding também dava certo (`onUploaded()` só era chamado no sucesso do `/embed`) — se o upload salvasse mas o embedding falhasse, o documento ficava invisível até um refresh manual da página inteira. Corrigido chamando `onUploaded()` logo após o upload salvar, antes mesmo do embedding começar.
+- **Limite de 100 itens por lote:** a API do Gemini rejeita mais de 100 textos numa chamada de embedding (`BatchEmbedContentsRequest`). [embedder.py](../backend/app/services/embedder.py) agora divide em lotes automaticamente (`MAX_BATCH_SIZE`), com retry por backoff exponencial específico para `RateLimitError`.
+- **Causa raiz investigada a fundo:** testes isolados (chamando o SDK direto, fora da nossa camada de retry) mostraram que o problema não é tamanho de lote nem token/minuto — um lote de 50 textos (~15.7k tokens, bem abaixo de qualquer limite razoável) funcionou isolado, mas falhou minutos depois com o erro **original** da Gemini: `429 RESOURCE_EXHAUSTED — "You exceeded your current quota"`. É cota real do tier gratuito esgotando com o volume de testes da sessão, não um padrão de chamada que o código gera errado.
+- **Decisão registrada:** não vale mais tempo ajustando `MAX_BATCH_SIZE`/delays — isso é constraint de conta gratuita, não bug. Uma chave paga (Gemini ou OpenAI) não teria esse problema no volume de uso normal do projeto.
 
 ---
 
