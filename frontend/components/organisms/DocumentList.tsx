@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { DocumentListItem } from "@/components/molecules/DocumentListItem";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
+import { ScrollableArea } from "@/components/molecules/ScrollableArea";
 import { listDocuments, deleteDocument } from "@/lib/api";
 import type { DocumentListItem as DocumentListItemType } from "@/lib/types";
 
@@ -48,7 +49,7 @@ export function DocumentList({ refreshKey }: { refreshKey: number }) {
   }
 
   return (
-    <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto">
+    <ScrollableArea>
       {documents.map((doc) => (
         <DocumentListItem
           key={doc.id}
@@ -67,6 +68,6 @@ export function DocumentList({ refreshKey }: { refreshKey: number }) {
           onCancel={() => setPendingDelete(null)}
         />
       )}
-    </div>
+    </ScrollableArea>
   );
 }
