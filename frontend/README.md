@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RAG Tech Docs — Frontend
 
-## Getting Started
+Interface em Next.js (App Router) para o [RAG Tech Docs](../README.md). Veja o README na raiz do projeto para visão geral, stack completa e como subir o backend/banco de dados.
 
-First, run the development server:
+## Rodando localmente
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **http://localhost:3000** — gerenciamento de documentos (upload, lista, download, exclusão)
+- **http://localhost:3000/chat** — chat com citações
+- **http://localhost:3000/styleguide** — Design System ao vivo (tokens, átomos, moléculas, organismos)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Requer o backend rodando em `http://localhost:8000` (ou ajuste `NEXT_PUBLIC_API_URL` num `.env.local`).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Estrutura
 
-## Learn More
+Componentes organizados em **Atomic Design**:
 
-To learn more about Next.js, take a look at the following resources:
+```
+components/
+├── atoms/       # Button, IconButton, Badge, ProgressBar, ThemeToggle...
+├── molecules/    # ChatInput, Dropzone, ConfirmDialog, DocumentListItem...
+├── organisms/     # ChatWindow, DocumentManager, AppHeader...
+└── templates/       # ChatPageTemplate
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Tokens de design (cores, tipografia, raio, sombra) ficam em [`app/globals.css`](app/globals.css); o racional de cada decisão visual está documentado em [`.claude/skills/rag-tech-frontend-design/SKILL.md`](../.claude/skills/rag-tech-frontend-design/SKILL.md).
