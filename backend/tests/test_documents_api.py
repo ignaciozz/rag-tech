@@ -178,6 +178,7 @@ def test_embed_502_quando_provedor_de_ia_falha(client, monkeypatch):
 
     from app.services import embedder
 
+
     def fake_create(model, input, dimensions):
         raise openai.RateLimitError(
             message="limite excedido",

@@ -113,15 +113,24 @@ Este documento registra a evolução, decisões de arquitetura e passos prático
 
 ### 2. Suíte de Testes (`pytest`)
 - [backend/tests/](../backend/tests/): banco de teste dedicado (`rag_tech_docs_test`, mesmo Postgres), truncado entre testes; `TestClient` do FastAPI com `get_db` sobrescrito; mocks do cliente de IA via fábricas de fixture (`mock_embeddings`, `mock_chat`) — zero chamada de rede real, suíte inteira roda em <1s.
-- 33 testes: `chunker` (5), `extractor` (6), `embedder` (2), `rag` (3), API de documentos (14, incluindo listagem/exclusão/download), API de chat (3).
+- 36 testes: `chunker` (5), `extractor` (6), `embedder` (5, incluindo batching e retry), `rag` (3), API de documentos (14), API de chat (3).
 - Cobre inclusive o tratamento de erro do item acima, de ponta a ponta pela API.
+
+### 3. Limites do Provedor de IA (descobertos em uso real)
+- **Bug real no frontend:** "Tente novamente" não fazia nada quando o *primeiro* embedding falhava — a função de retry dependia de um estado (`lastResult`) que só era preenchido em caso de sucesso. Corrigido guardando o título do documento assim que o upload termina, independente do embedding dar certo.
+- **Limite de 100 itens por lote:** a API do Gemini rejeita mais de 100 textos numa chamada de embedding (`BatchEmbedContentsRequest`). [embedder.py](../backend/app/services/embedder.py) agora divide em lotes automaticamente.
+- **Limite de 30k tokens/minuto (tier gratuito):** o limite real não é a contagem de itens, é tokens — um lote de 100 chunks de ~500 tokens passa fácil de 30k numa chamada só, e isso **não se resolve só com retry** (a mesma chamada grande demais esbarra de novo). `MAX_BATCH_SIZE` reduzido para 50, mais uma pausa curta entre lotes (`INTER_BATCH_DELAY_SECONDS`).
+- Retry com backoff exponencial especificamente para `RateLimitError` (`MAX_RATE_LIMIT_RETRIES`), separado de outros erros (que falham na hora, sem tentar de novo).
+- **Decisão registrada:** essa é uma limitação do tier *gratuito* do Gemini (30k tokens/min), não um limite genérico do projeto — uma chave paga (Gemini ou OpenAI) não esbarraria nisso para documentos desse tamanho. Não vale investir mais tempo ajustando esses números agora.
 
 ---
 
 ### 🎯 Próximos Passos Imediatos:
-1. Garantir ambiente pronto para open source (README, documentação, etc.) — o projeto é portfólio público no GitHub; maior retorno imediato (quem avalia lê o README antes de rodar o projeto).
-2. Avaliação de qualidade das respostas do RAG.
-3. UX e refinos finais.
+1. Avaliação de qualidade das respostas do RAG.
+2. UX e refinos finais.
+
+### ✅ Concluído recentemente:
+- `README.md` reescrito para portfólio open source: funcionalidades, pipeline de RAG, stack honesta sobre Docker, instruções de setup e testes.
 
 ### 📌 Backlog (prioridade baixa por ora):
 - Dockerizar backend e frontend (hoje só o Postgres está no `docker-compose.yml`). Decisão registrada: adiado — maior esforço/risco do que ganho imediato pro portfólio; README e demo pesam mais pra quem avalia sem rodar o projeto local.

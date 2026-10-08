@@ -16,6 +16,12 @@ TEST_DATABASE_URL = settings.DATABASE_URL.rsplit("/", 1)[0] + "/rag_tech_docs_te
 
 
 @pytest.fixture(autouse=True)
+def _no_real_sleep(monkeypatch):
+    """Nunca espera de verdade em teste — o retry por rate limit usa time.sleep."""
+    monkeypatch.setattr(embedder.time, "sleep", lambda _seconds: None)
+
+
+@pytest.fixture(autouse=True)
 def _use_tmp_uploads_dir(tmp_path, monkeypatch):
     """Nunca grava arquivo de teste na pasta real de uploads."""
     monkeypatch.setattr(settings, "UPLOADS_DIR", tmp_path)

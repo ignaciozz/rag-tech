@@ -43,6 +43,7 @@ export function UploadPanel({ onUploaded }: { onUploaded?: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [errorStep, setErrorStep] = useState<"upload" | "embed" | null>(null);
   const [documentId, setDocumentId] = useState<string | null>(null);
+  const [documentTitle, setDocumentTitle] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<{
     title: string;
     chunksEmbedded: number;
@@ -73,6 +74,7 @@ export function UploadPanel({ onUploaded }: { onUploaded?: () => void }) {
     try {
       const doc = await uploadDocument(selectedFile, tech, "");
       setDocumentId(doc.id);
+      setDocumentTitle(doc.title);
       await runEmbed(doc.id, doc.title);
     } catch {
       setErrorStep("upload");
@@ -82,8 +84,8 @@ export function UploadPanel({ onUploaded }: { onUploaded?: () => void }) {
   }
 
   function handleRetry() {
-    if (errorStep === "embed" && documentId && lastResult) {
-      runEmbed(documentId, lastResult.title);
+    if (errorStep === "embed" && documentId && documentTitle) {
+      runEmbed(documentId, documentTitle);
     } else if (errorStep === "upload" && file) {
       runUpload(file, technology.trim());
     }
@@ -96,6 +98,7 @@ export function UploadPanel({ onUploaded }: { onUploaded?: () => void }) {
     setError(null);
     setErrorStep(null);
     setDocumentId(null);
+    setDocumentTitle(null);
   }
 
   function handleArrowClick() {
