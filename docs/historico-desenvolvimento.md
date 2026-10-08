@@ -94,8 +94,13 @@ Este documento registra a evolução, decisões de arquitetura e passos prático
 ### 5. Tela de Upload (`/`, rota inicial)
 - `UploadPanel`: fluxo central único — `Dropzone` (clicar/arrastar) → campo de tecnologia inline → `ProgressBar` em etapas reais (20% selecionado → 60% upload → 90% embedding → 100% concluído), sem animação falsa de bytes.
 - Orquestra no frontend o que o backend expõe como 2 chamadas separadas: `uploadDocument()` seguido de `embedDocument()` automaticamente — e com retry por etapa (se só o embedding falhar, tenta de novo sem reenviar o arquivo).
-- Botão de ação (seta) muda de função por etapa: confirma tecnologia → vira "ir para o chat" quando concluído.
-- Rotas: `/` = upload (entrada), `/chat` = conversa.
+- Rotas: `/` = Documentos (upload + gerenciamento), `/chat` = conversa.
+
+### 6. Gerenciamento de Documentos
+- Backend: `GET /api/v1/documents` (lista com contagem de chunks totais/processados via agregação SQL — `func.count()` ignora `NULL` automaticamente) e `DELETE /{id}` (cascata já cuidava dos chunks).
+- Armazenamento do arquivo original: upload agora salva os bytes em `backend/uploads/<id>.<extensão>` (gitignorado); `GET /{id}/download` devolve com `Content-Disposition: attachment`; apagar o documento remove o arquivo também. Documentos cadastrados antes dessa mudança não têm arquivo em disco (404 esperado ao tentar baixar).
+- Frontend: `UploadPanel` deixou de ter janela própria (virou só o conteúdo); `DocumentList` (nova) busca/lista/apaga com `ConfirmDialog`; `DocumentManager` junta os dois numa única janela com `AppHeader` (link "Chat" voltou ao cabeçalho). Título de cada item é um link de download.
+- Dois bugs de CSS corrigidos: scroll da lista não funcionava (faltava `min-h-0` em dois níveis do flex — item flex não encolhe abaixo do conteúdo sem isso) e barra de scroll agora invisível (`.scrollbar-hide`, cross-browser).
 
 ---
 
@@ -108,14 +113,15 @@ Este documento registra a evolução, decisões de arquitetura e passos prático
 
 ### 2. Suíte de Testes (`pytest`)
 - [backend/tests/](../backend/tests/): banco de teste dedicado (`rag_tech_docs_test`, mesmo Postgres), truncado entre testes; `TestClient` do FastAPI com `get_db` sobrescrito; mocks do cliente de IA via fábricas de fixture (`mock_embeddings`, `mock_chat`) — zero chamada de rede real, suíte inteira roda em <1s.
-- 25 testes: `chunker` (5), `extractor` (6), `embedder` (2), `rag` (3), API de documentos (6), API de chat (3).
+- 33 testes: `chunker` (5), `extractor` (6), `embedder` (2), `rag` (3), API de documentos (14, incluindo listagem/exclusão/download), API de chat (3).
 - Cobre inclusive o tratamento de erro do item acima, de ponta a ponta pela API.
 
 ---
 
 ### 🎯 Próximos Passos Imediatos:
-1. Tela de gerenciamento de documentos (listar/apagar os já cadastrados — hoje só dá pra consultar via `psql`/Swagger).
-2. Dockerizar backend e frontend (hoje só o Postgres está no `docker-compose.yml`).
-3. Avaliação de qualidade das respostas do RAG.
-4. UX e refinos finais.
-5. Garantir ambiente pronto para open source (README, documentação, etc.) — o projeto é portfólio público no GitHub, outros devs precisam conseguir clonar, configurar e rodar sem fricção.
+1. Garantir ambiente pronto para open source (README, documentação, etc.) — o projeto é portfólio público no GitHub; maior retorno imediato (quem avalia lê o README antes de rodar o projeto).
+2. Avaliação de qualidade das respostas do RAG.
+3. UX e refinos finais.
+
+### 📌 Backlog (prioridade baixa por ora):
+- Dockerizar backend e frontend (hoje só o Postgres está no `docker-compose.yml`). Decisão registrada: adiado — maior esforço/risco do que ganho imediato pro portfólio; README e demo pesam mais pra quem avalia sem rodar o projeto local.

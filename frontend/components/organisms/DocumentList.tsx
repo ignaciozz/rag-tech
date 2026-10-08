@@ -48,7 +48,7 @@ export function DocumentList({ refreshKey }: { refreshKey: number }) {
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
+    <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto">
       {documents.map((doc) => (
         <DocumentListItem
           key={doc.id}
