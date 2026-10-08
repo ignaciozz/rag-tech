@@ -75,6 +75,7 @@ export function UploadPanel({ onUploaded }: { onUploaded?: () => void }) {
       const doc = await uploadDocument(selectedFile, tech, "");
       setDocumentId(doc.id);
       setDocumentTitle(doc.title);
+      onUploaded?.(); // já salvo no banco — lista atualiza mesmo que o embedding falhe a seguir
       await runEmbed(doc.id, doc.title);
     } catch {
       setErrorStep("upload");
